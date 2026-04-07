@@ -1,0 +1,3 @@
+class PipelineConfig {
+  const PipelineConfig();
+}

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PingPongBuddy — Color Theme Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F3EF;
+    --page-text: #1A1A1A;
+    --page-muted: #6B6560;
+    --border: #D6D0C8;
+    --card-bg: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--page-bg);
+    color: var(--page-text);
+    line-height: 1.5;
+    padding: 40px 24px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .page-header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .page-header p {
+    color: var(--page-muted);
+    font-size: 15px;
+    max-width: 680px;
+  }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  @media (max-width: 900px) {
+    .theme-grid { grid-template-columns: 1fr; }
+  }
+
+  .theme-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .theme-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+
+  .theme-card.selected {
+    outline: 3px solid var(--page-text);
+    outline-offset: 2px;
+  }
+
+  .theme-band {
+    height: 6px;
+    width: 100%;
+  }
+
+  .theme-header {
+    padding: 24px 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .theme-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+  }
+
+  .theme-subtitle {
+    color: var(--page-muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .seed-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    color: white;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .palette-row {
+    display: flex;
+    margin: 0 24px;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 36px;
+  }
+
+  .palette-swatch {
+    flex: 1;
+    position: relative;
+  }
+
+  .palette-swatch:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--page-muted);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .theme-description {
+    padding: 16px 24px;
+    font-size: 13px;
+    color: var(--page-muted);
+    line-height: 1.6;
+  }
+
+  /* --- Mock Phone UI --- */
+  .phone-mock {
+    margin: 0 24px 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .phone-screen {
+    padding: 20px 16px 16px;
+    min-height: 280px;
+    position: relative;
+  }
+
+  .phone-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    padding-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  .mock-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  .hero-metric {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  .delta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-top: 10px;
+  }
+
+  .delta-arrow { font-size: 11px; }
+
+  .divider-line {
+    height: 1px;
+    margin: 16px 0;
+    opacity: 0.15;
+  }
+
+  .coach-tip {
+    font-size: 13px;
+    line-height: 1.55;
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  .coach-tip strong {
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .metrics-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .mini-metric {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .mini-metric-val {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.2;
+  }
+
+  .mini-metric-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+
+  .traits-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 0 24px 20px;
+  }
+
+  .trait-tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    color: var(--page-muted);
+  }
+
+  /* --- Full-screen Preview Overlay --- */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .overlay.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .overlay-content {
+    background: var(--card-bg);
+    border-radius: 20px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .overlay-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .overlay-phone {
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .overlay-phone .phone-screen {
+    min-height: 520px;
+    padding: 28px 24px 24px;
+  }
+
+  .overlay-phone .hero-metric { font-size: 72px; }
+  .overlay-phone .coach-tip { font-size: 15px; }
+  .overlay-phone .mock-title { font-size: 14px; }
+  .overlay-phone .mini-metric-val { font-size: 22px; }
+  .overlay-phone .mini-metric-label { font-size: 10px; }
+
+  .overlay-phone .extra-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    opacity: 0.7;
+  }
+
+  .overlay-phone .extra-section .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .overlay-phone .feedback-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .overlay-phone .feedback-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .section-hint {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--page-muted);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>PingPongBuddy — Color Direction</h1>
+  <p>Four theme directions for a quiet, data-driven coaching app. Each is shown on a mock session summary — the screen users will see most. Click any card for a larger preview.</p>
+</div>
+
+<div class="theme-grid" id="grid"></div>
+
+<div class="overlay" id="overlay">
+  <button class="overlay-close" onclick="closeOverlay()">✕</button>
+  <div class="overlay-content" id="overlayContent"></div>
+</div>
+
+<script>
+const themes = [
+  {
+    id: "teal",
+    name: "Quiet Confidence",
+    subtitle: "Deep teal — calm authority",
+    seed: "#00796B",
+    description: "Evokes a seasoned coach watching from the sideline. Teal reads as analytical and trustworthy without being cold. The green undertone connects subtly to the table surface. This is the \"I've been doing this a long time\" palette.",
+    traits: ["Trustworthy", "Analytical", "Calm", "Professional"],
+    colors: {
+      primary: "#00796B",
+      onPrimary: "#FFFFFF",
+      primaryContainer: "#A7F3EB",
+      onPrimaryContainer: "#002019",
+      surface: "#F5FFFE",
+      onSurface: "#191C1C",
+      surfaceVariant: "#DAE5E2",
+      onSurfaceVariant: "#3F4946",
+      secondary: "#4A635F",
+      secondaryContainer: "#CCE8E2",
+      tertiary: "#456179",
+      tertiaryContainer: "#CCE5FF",
+      outline: "#6F7977",
+      delta: "#007A5E",
+      deltaBg: "#D4F5EC",
+      miniMetricBg: "#E8F5F3",
+    }
+  },
+  {
+    id: "slate",
+    name: "The Analyst",
+    subtitle: "Slate blue — restrained precision",
+    seed: "#455A64",
+    description: "Cool professional restraint. The coach who speaks in measured sentences. Slate blue feels data-native — charts, numbers, and metrics look at home here. Low saturation lets the hero metric command attention without competing with chrome.",
+    traits: ["Precise", "Minimal", "Modern", "Measured"],
+    colors: {
+      primary: "#455A64",
+      onPrimary: "#FFFFFF",
+      primaryContainer: "#C8DDE8",
+      onPrimaryContainer: "#0D1B24",
+      surface: "#F8FAFB",
+      onSurface: "#191C1E",
+      surfaceVariant: "#DDE3E8",
+      onSurfaceVariant: "#41484D",
+      secondary: "#586268",
+      secondaryContainer: "#DCE6ED",
+      tertiary: "#5D5B6E",
+      tertiaryContainer: "#E3DFF2",
+      outline: "#71787E",
+      delta: "#2E7D5B",
+      deltaBg: "#D4EDDF",
+      miniMetricBg: "#ECF0F3",
+    }
+  },
+  {
+    id: "green",
+    name: "Steady Growth",
+    subtitle: "Forest green — grounded progress",
+    seed: "#2E7D32",
+    description: "Growth, improvement, natural trajectory. Green is the most intuitive color for \"getting better\" — up arrows, positive deltas, and progress all feel native. The forest depth avoids looking like a generic success color and instead reads as patience and longevity.",
+    traits: ["Growth", "Honest", "Grounded", "Warm"],
+    colors: {
+      primary: "#2E7D32",
+      onPrimary: "#FFFFFF",
+      primaryContainer: "#B6F2B8",
+      onPrimaryContainer: "#002204",
+      surface: "#F7FCF5",
+      onSurface: "#1A1C19",
+      surfaceVariant: "#DEE5D9",
+      onSurfaceVariant: "#424940",
+      secondary: "#526350",
+      secondaryContainer: "#D5E8D0",
+      tertiary: "#39656B",
+      tertiaryContainer: "#BCE9F0",
+      outline: "#727970",
+      delta: "#1B8A2F",
+      deltaBg: "#D6F5D8",
+      miniMetricBg: "#EBF5EA",
+    }
+  },
+  {
+    id: "ember",
+    name: "Court Energy",
+    subtitle: "Warm ember — approachable intensity",
+    seed: "#BF360C",
+    description: "Draws from the orange ball and the energy of the sport. Warm tones feel approachable and slightly playful while a deep ember base keeps it from reading as juvenile. This is the boldest option — the app that winks at you, but still has the numbers.",
+    traits: ["Energetic", "Warm", "Approachable", "Bold"],
+    colors: {
+      primary: "#BF360C",
+      onPrimary: "#FFFFFF",
+      primaryContainer: "#FFD9CC",
+      onPrimaryContainer: "#3B0800",
+      surface: "#FFFBF8",
+      onSurface: "#201A17",
+      surfaceVariant: "#F3DED5",
+      onSurfaceVariant: "#52443C",
+      secondary: "#77574C",
+      secondaryContainer: "#FFDAD0",
+      tertiary: "#6B5E2F",
+      tertiaryContainer: "#F5E2A7",
+      outline: "#85746B",
+      delta: "#00845A",
+      deltaBg: "#CCEFE0",
+      miniMetricBg: "#FFF0EB",
+    }
+  }
+];
+
+function renderCard(t) {
+  const c = t.colors;
+  return `
+    <div class="theme-card" onclick="openOverlay('${t.id}')">
+      <div class="theme-band" style="background: ${c.primary}"></div>
+      <div class="theme-header">
+        <div>
+          <div class="theme-name">${t.name}</div>
+          <div class="theme-subtitle">${t.subtitle}</div>
+        </div>
+        <div class="seed-chip" style="background: ${c.primary}">${t.seed}</div>
+      </div>
+      <div class="palette-row">
+        <div class="palette-swatch" style="background: ${c.primary}" data-label="Primary"></div>
+        <div class="palette-swatch" style="background: ${c.primaryContainer}" data-label="Container"></div>
+        <div class="palette-swatch" style="background: ${c.secondary}" data-label="Secondary"></div>
+        <div class="palette-swatch" style="background: ${c.secondaryContainer}" data-label="Sec. Cont."></div>
+        <div class="palette-swatch" style="background: ${c.tertiary}" data-label="Tertiary"></div>
+        <div class="palette-swatch" style="background: ${c.tertiaryContainer}" data-label="Tert. Cont."></div>
+        <div class="palette-swatch" style="background: ${c.surfaceVariant}" data-label="Surface Var."></div>
+      </div>
+      <div class="theme-description">${t.description}</div>
+      <div class="phone-mock">
+        <div class="phone-screen" style="background: ${c.surface}; color: ${c.onSurface};">
+          <div class="phone-status-bar" style="color: ${c.onSurfaceVariant};">
+            <span>Session Summary</span>
+            <span>2:47 PM</span>
+          </div>
+          <div class="mock-title" style="color: ${c.onSurfaceVariant};">Forehand Topspin</div>
+          <div class="hero-metric" style="color: ${c.primary};">58%</div>
+          <div class="hero-label" style="color: ${c.onSurfaceVariant};">on-table rate</div>
+          <div class="delta-badge" style="background: ${c.deltaBg}; color: ${c.delta};">
+            <span class="delta-arrow">▲</span> from 52%
+          </div>
+          <div class="divider-line" style="background: ${c.onSurface}"></div>
+          <div class="coach-tip" style="color: ${c.onSurface};">
+            <strong style="color: ${c.primary};">One thing to try:</strong> Your shoulder rotation has been climbing — and your on-table rate is climbing with it.
+          </div>
+          <div class="metrics-row">
+            <div class="mini-metric" style="background: ${c.miniMetricBg};">
+              <div class="mini-metric-val" style="color: ${c.primary};">42°</div>
+              <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Shoulder</div>
+            </div>
+            <div class="mini-metric" style="background: ${c.miniMetricBg};">
+              <div class="mini-metric-val" style="color: ${c.primary};">118°</div>
+              <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Elbow</div>
+            </div>
+            <div class="mini-metric" style="background: ${c.miniMetricBg};">
+              <div class="mini-metric-val" style="color: ${c.primary};">67°</div>
+              <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Arc</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="traits-row">
+        ${t.traits.map(tr => `<span class="trait-tag">${tr}</span>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderOverlay(t) {
+  const c = t.colors;
+  return `
+    <div class="overlay-phone">
+      <div class="theme-band" style="background: ${c.primary}; height: 4px;"></div>
+      <div class="phone-screen" style="background: ${c.surface}; color: ${c.onSurface};">
+        <div class="phone-status-bar" style="color: ${c.onSurfaceVariant};">
+          <span>← Session Summary</span>
+          <span>2:47 PM</span>
+        </div>
+        <div class="mock-title" style="color: ${c.onSurfaceVariant};">Forehand Topspin · 32 min</div>
+        <div class="hero-metric" style="color: ${c.primary};">58%</div>
+        <div class="hero-label" style="color: ${c.onSurfaceVariant};">on-table rate · 86 strokes detected</div>
+        <div class="delta-badge" style="background: ${c.deltaBg}; color: ${c.delta};">
+          <span class="delta-arrow">▲</span> from 52% last session
+        </div>
+        <div class="divider-line" style="background: ${c.onSurface}"></div>
+        <div class="coach-tip" style="color: ${c.onSurface};">
+          <strong style="color: ${c.primary};">One thing to try:</strong> Your shoulder rotation has been climbing — and your on-table rate is climbing with it. Keep that rotation above 40° and see what happens.
+        </div>
+        <div class="metrics-row">
+          <div class="mini-metric" style="background: ${c.miniMetricBg};">
+            <div class="mini-metric-val" style="color: ${c.primary};">42°</div>
+            <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Shoulder</div>
+          </div>
+          <div class="mini-metric" style="background: ${c.miniMetricBg};">
+            <div class="mini-metric-val" style="color: ${c.primary};">118°</div>
+            <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Elbow</div>
+          </div>
+          <div class="mini-metric" style="background: ${c.miniMetricBg};">
+            <div class="mini-metric-val" style="color: ${c.primary};">67°</div>
+            <div class="mini-metric-label" style="color: ${c.onSurfaceVariant};">Arc</div>
+          </div>
+        </div>
+        <div class="extra-section" style="border-top: 1px solid ${c.surfaceVariant};">
+          <div class="section-label" style="color: ${c.onSurfaceVariant};">Backhand Topspin · 41 strokes</div>
+          <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
+            <span style="font-family: 'Fraunces', serif; font-weight: 700; font-size: 28px; color: ${c.secondary};">63%</span>
+            <span style="font-size: 12px; color: ${c.delta};">▲ from 59%</span>
+          </div>
+        </div>
+        <div class="extra-section" style="border-top: 1px solid ${c.surfaceVariant};">
+          <div class="section-label" style="color: ${c.onSurfaceVariant};">Session quality</div>
+          <div style="font-size: 12px; color: ${c.onSurfaceVariant}; margin-top: 4px;">Based on 94% of strokes · Good visibility</div>
+        </div>
+        <div class="feedback-row">
+          <button class="feedback-btn" style="background: ${c.primaryContainer}; color: ${c.onPrimaryContainer};">👍 Helpful</button>
+          <button class="feedback-btn" style="background: ${c.surfaceVariant}; color: ${c.onSurfaceVariant};">👎 Not quite</button>
+        </div>
+      </div>
+    </div>
+    <div class="section-hint">This is how the session summary — PingPongBuddy's most-seen screen — would feel with the <strong>${t.name}</strong> palette.</div>
+  `;
+}
+
+const grid = document.getElementById('grid');
+themes.forEach(t => grid.innerHTML += renderCard(t));
+
+function openOverlay(id) {
+  const theme = themes.find(t => t.id === id);
+  document.getElementById('overlayContent').innerHTML = renderOverlay(theme);
+  document.getElementById('overlay').classList.add('active');
+}
+
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('active');
+}
+
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closeOverlay();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeOverlay();
+});
+</script>
+</body>
+</html>

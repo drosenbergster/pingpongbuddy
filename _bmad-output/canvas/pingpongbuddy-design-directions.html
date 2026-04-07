@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PingPongBuddy — Design Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #455A64;
+    --on-primary: #FFFFFF;
+    --primary-container: #C8DDE8;
+    --on-primary-container: #0D1B24;
+    --secondary: #586268;
+    --secondary-container: #DCE6ED;
+    --tertiary: #5D5B6E;
+    --tertiary-container: #E3DFF2;
+    --surface: #F8FAFB;
+    --surface-elevated: #ECF0F3;
+    --on-surface: #191C1E;
+    --surface-variant: #DDE3E8;
+    --on-surface-variant: #41484D;
+    --outline: #71787E;
+    --delta-pos: #2E7D5B;
+    --delta-pos-surface: #D4EDDF;
+    --delta-neg: #71787E;
+    --delta-neg-surface: #E8EAEB;
+    --error: #BA1A1A;
+
+    --page-bg: #E8EAEB;
+    --font-serif: 'Source Serif 4', Georgia, serif;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--page-bg);
+    color: var(--on-surface);
+    line-height: 1.5;
+  }
+
+  .page-header {
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 48px 40px 40px;
+  }
+
+  .page-header h1 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    opacity: 0.85;
+    max-width: 720px;
+    line-height: 1.6;
+  }
+
+  .nav-bar {
+    background: var(--on-surface);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { color: rgba(255,255,255,0.9); }
+  .nav-btn.active {
+    color: #FFFFFF;
+    border-bottom-color: var(--primary-container);
+  }
+
+  .directions-container {
+    padding: 32px 40px 80px;
+  }
+
+  .direction-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .direction-section.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .direction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .direction-header h2 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 24px;
+    color: var(--on-surface);
+    letter-spacing: -0.3px;
+  }
+
+  .direction-header .subtitle {
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    margin-top: 4px;
+    max-width: 500px;
+  }
+
+  .direction-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--primary);
+    color: var(--on-primary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .phones-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .phone-frame {
+    width: 320px;
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+
+  .phone-frame .screen-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    padding: 12px 20px 0;
+  }
+
+  .phone-notch {
+    width: 80px;
+    height: 24px;
+    background: var(--on-surface);
+    border-radius: 0 0 12px 12px;
+    margin: 0 auto;
+  }
+
+  /* ========================================= */
+  /* Direction A: Clean Center Stack            */
+  /* ========================================= */
+  .da-screen {
+    background: var(--surface);
+    padding: 12px 20px 20px;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .da-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    padding-bottom: 8px;
+  }
+
+  .da-stroke-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    text-align: center;
+    margin-top: 24px;
+  }
+
+  .da-hero {
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  .da-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 64px;
+    color: var(--primary);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .da-hero-label {
+    font-size: 13px;
+    color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+
+  .da-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-top: 8px;
+  }
+
+  .da-delta.pos { background: var(--delta-pos-surface); color: var(--delta-pos); }
+  .da-delta.neg { background: var(--delta-neg-surface); color: var(--delta-neg); }
+
+  .da-divider {
+    height: 1px;
+    background: var(--surface-variant);
+    margin: 20px 0;
+  }
+
+  .da-coach {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--on-surface);
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .da-coach strong {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .da-metrics {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .da-metric-card {
+    flex: 1;
+    background: var(--surface-elevated);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+
+  .da-metric-val {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--primary);
+    line-height: 1.2;
+  }
+
+  .da-metric-lbl {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+
+  .da-bottom-actions {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .da-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .da-btn.primary { background: var(--primary-container); color: var(--on-primary-container); }
+  .da-btn.ghost { background: var(--surface-variant); color: var(--on-surface-variant); }
+
+  /* ========================================= */
+  /* Direction B: Left-Anchored Editorial       */
+  /* ========================================= */
+  .db-screen {
+    background: var(--surface);
+    padding: 12px 20px 20px;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .db-back { font-size: 12px; color: var(--primary); font-weight: 500; margin-bottom: 20px; }
+
+  .db-stroke-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--on-surface-variant);
+  }
+
+  .db-hero-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .db-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 72px;
+    color: var(--primary);
+    letter-spacing: -3px;
+    line-height: 1;
+  }
+
+  .db-hero-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .db-hero-label {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+  }
+
+  .db-delta {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--delta-pos);
+  }
+
+  .db-coach-block {
+    background: var(--surface-elevated);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 20px;
+    border-left: 3px solid var(--primary);
+  }
+
+  .db-coach-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  .db-coach-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+    line-height: 1.5;
+  }
+
+  .db-section-divider {
+    height: 1px;
+    background: var(--surface-variant);
+    margin: 16px 0;
+  }
+
+  .db-metrics-header {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    margin-bottom: 8px;
+  }
+
+  .db-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--surface-variant);
+  }
+
+  .db-metric-row:last-child { border-bottom: none; }
+
+  .db-metric-name {
+    font-size: 13px;
+    color: var(--on-surface-variant);
+  }
+
+  .db-metric-value {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary);
+  }
+
+  /* ========================================= */
+  /* Direction C: Hero Band                     */
+  /* ========================================= */
+  .dc-hero-band {
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 16px 20px 24px;
+  }
+
+  .dc-hero-band .top-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    opacity: 0.7;
+    margin-bottom: 16px;
+  }
+
+  .dc-stroke-type {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
+  .dc-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 64px;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .dc-hero-sub {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .dc-hero-label { font-size: 13px; opacity: 0.8; }
+
+  .dc-delta-chip {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .dc-body {
+    background: var(--surface);
+    padding: 20px;
+    min-height: 340px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dc-coach {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+    line-height: 1.55;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--surface-variant);
+  }
+
+  .dc-coach .label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+
+  .dc-breakdown {
+    margin-top: 16px;
+  }
+
+  .dc-breakdown-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    margin-bottom: 8px;
+  }
+
+  .dc-mini-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .dc-mini {
+    flex: 1;
+    background: var(--surface-elevated);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+
+  .dc-mini-val {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--secondary);
+  }
+
+  .dc-mini-lbl {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+
+  .dc-quality {
+    margin-top: auto;
+    padding-top: 16px;
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    text-align: center;
+  }
+
+  /* ========================================= */
+  /* Direction D: Minimal Typographic           */
+  /* ========================================= */
+  .dd-screen {
+    background: #FFFFFF;
+    padding: 12px 24px 20px;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dd-nav {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    margin-bottom: 32px;
+  }
+
+  .dd-date {
+    font-size: 12px;
+    color: var(--outline);
+    margin-bottom: 4px;
+  }
+
+  .dd-type {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: 32px;
+  }
+
+  .dd-hero-block {
+    margin-bottom: 32px;
+  }
+
+  .dd-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 80px;
+    color: var(--on-surface);
+    letter-spacing: -3px;
+    line-height: 0.9;
+  }
+
+  .dd-hero-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .dd-hero-label {
+    font-size: 13px;
+    color: var(--outline);
+  }
+
+  .dd-delta-inline {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--delta-pos);
+  }
+
+  .dd-coach-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--on-surface);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    padding-left: 12px;
+    border-left: 2px solid var(--surface-variant);
+  }
+
+  .dd-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--surface-variant);
+  }
+
+  .dd-metric-cell {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--surface-variant);
+  }
+
+  .dd-metric-cell:not(:nth-child(3n)) {
+    border-right: 1px solid var(--surface-variant);
+    padding-right: 12px;
+  }
+
+  .dd-metric-cell:not(:nth-child(3n+1)) {
+    padding-left: 12px;
+  }
+
+  .dd-mc-val {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--on-surface);
+  }
+
+  .dd-mc-lbl {
+    font-size: 9px;
+    color: var(--outline);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ========================================= */
+  /* Direction E: Card Compartments             */
+  /* ========================================= */
+  .de-screen {
+    background: var(--surface-variant);
+    padding: 12px 14px 14px;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .de-nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .de-back { font-size: 12px; color: var(--primary); font-weight: 500; }
+  .de-time { font-size: 11px; color: var(--on-surface-variant); }
+
+  .de-card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .de-card-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    margin-bottom: 8px;
+  }
+
+  .de-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 52px;
+    color: var(--primary);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+
+  .de-hero-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .de-hero-meta {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+  }
+
+  .de-delta {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--delta-pos);
+  }
+
+  .de-coach-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--on-surface);
+    line-height: 1.5;
+  }
+
+  .de-mini-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .de-mini {
+    flex: 1;
+    text-align: center;
+  }
+
+  .de-mini-val {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--secondary);
+  }
+
+  .de-mini-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--on-surface-variant);
+  }
+
+  .de-quality-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .de-quality-text {
+    font-size: 11px;
+    color: var(--on-surface-variant);
+  }
+
+  .de-feedback-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .de-fb-btn {
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--surface-variant);
+    background: none;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    color: var(--on-surface-variant);
+  }
+
+  /* ========================================= */
+  /* Direction F: Immersive Summary             */
+  /* ========================================= */
+  .df-screen {
+    background: var(--on-surface);
+    padding: 12px 20px 20px;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .df-top { display: flex; justify-content: space-between; font-size: 11px; opacity: 0.5; margin-bottom: 24px; }
+
+  .df-stroke-type {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.5;
+  }
+
+  .df-hero-num {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 88px;
+    letter-spacing: -4px;
+    line-height: 0.85;
+    color: white;
+  }
+
+  .df-hero-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .df-hero-label { font-size: 13px; opacity: 0.6; }
+
+  .df-delta-chip {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6ECF9D;
+  }
+
+  .df-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 24px 0;
+  }
+
+  .df-coach {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .df-coach .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary-container);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .df-metrics {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .df-mini {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .df-mini-val {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--primary-container);
+  }
+
+  .df-mini-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.5;
+    margin-top: 2px;
+  }
+
+  .df-bottom {
+    margin-top: auto;
+    font-size: 10px;
+    opacity: 0.3;
+    text-align: center;
+    padding-top: 16px;
+  }
+
+  /* ========================================= */
+  /* Shared: Recording screen mock              */
+  /* ========================================= */
+  .rec-screen {
+    background: #0A0A0A;
+    min-height: 540px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    color: white;
+  }
+
+  .rec-viewfinder {
+    flex: 1;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    opacity: 0.3;
+  }
+
+  .rec-bottom {
+    padding: 16px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rec-timer {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .rec-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: none;
+  }
+
+  .rec-btn-inner {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    transition: all 0.3s;
+  }
+
+  .rec-btn-inner.ready { background: #E53935; }
+  .rec-btn-inner.recording { background: #E53935; border-radius: 8px; width: 28px; height: 28px; }
+
+  .rec-hint {
+    font-size: 11px;
+    opacity: 0.4;
+  }
+
+  /* ========================================= */
+  /* Shared: History screen mock                */
+  /* ========================================= */
+  .hist-screen {
+    background: var(--surface);
+    padding: 12px 20px 20px;
+    min-height: 540px;
+  }
+
+  .hist-header {
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .hist-trajectory {
+    background: var(--surface-elevated);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .hist-traj-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    margin-bottom: 4px;
+  }
+
+  .hist-traj-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface);
+  }
+
+  .hist-traj-delta {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--delta-pos);
+    margin-top: 2px;
+  }
+
+  .hist-session-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--surface-variant);
+    align-items: center;
+  }
+
+  .hist-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--surface-variant);
+    flex-shrink: 0;
+  }
+
+  .hist-info { flex: 1; }
+
+  .hist-info-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--on-surface);
+  }
+
+  .hist-info-meta {
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    margin-top: 1px;
+  }
+
+  .hist-status {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+
+  .hist-status.analyzed { background: var(--delta-pos-surface); color: var(--delta-pos); }
+  .hist-status.pending { background: var(--surface-variant); color: var(--on-surface-variant); }
+  .hist-status.ready { background: var(--primary-container); color: var(--on-primary-container); }
+
+  /* ========================================= */
+  /* Comparison layout                          */
+  /* ========================================= */
+  .compare-section { display: none; }
+  .compare-section.active { display: block; }
+
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 1100px) {
+    .compare-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .compare-grid .phone-frame { width: 100%; }
+
+  .eval-criteria {
+    margin-top: 32px;
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .eval-criteria h3 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .eval-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--surface-variant);
+  }
+
+  .eval-row:last-child { border-bottom: none; }
+
+  .eval-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .eval-text { font-size: 13px; color: var(--on-surface-variant); line-height: 1.5; }
+  .eval-text strong { color: var(--on-surface); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>PingPongBuddy — Design Directions</h1>
+  <p>Six layout approaches for the session summary — the screen users see most. All use The Analyst palette, Source Serif 4 + DM Sans typography, and established spacing tokens. Click each tab to explore, or use "Compare All" for side-by-side.</p>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn active" onclick="show('a')">A · Clean Center</button>
+  <button class="nav-btn" onclick="show('b')">B · Left Editorial</button>
+  <button class="nav-btn" onclick="show('c')">C · Hero Band</button>
+  <button class="nav-btn" onclick="show('d')">D · Minimal Type</button>
+  <button class="nav-btn" onclick="show('e')">E · Card Compartments</button>
+  <button class="nav-btn" onclick="show('f')">F · Immersive Dark</button>
+  <button class="nav-btn" onclick="show('compare')">Compare All</button>
+</div>
+
+<div class="directions-container">
+
+  <!-- ===== Direction A ===== -->
+  <div class="direction-section active" id="sec-a">
+    <div class="direction-header">
+      <div>
+        <h2>A · Clean Center Stack</h2>
+        <div class="subtitle">Centered, airy, and symmetrical. The hero metric floats in generous whitespace. Every element centered on axis. The most "quiet" option — nothing competes for attention.</div>
+      </div>
+      <span class="direction-tag">Recommended</span>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div class="da-screen">
+          <div class="da-top-bar"><span>← Back</span><span>Share</span></div>
+          <div class="da-stroke-label">Forehand Topspin · 32 min</div>
+          <div class="da-hero">
+            <div class="da-hero-num">58%</div>
+            <div class="da-hero-label">on-table rate · 86 strokes</div>
+            <div class="da-delta pos">▲ from 52%</div>
+          </div>
+          <div class="da-divider"></div>
+          <div class="da-coach"><strong>One thing to try:</strong> Your shoulder rotation has been climbing — and your on-table rate is climbing with it.</div>
+          <div class="da-metrics">
+            <div class="da-metric-card"><div class="da-metric-val">42°</div><div class="da-metric-lbl">Shoulder</div></div>
+            <div class="da-metric-card"><div class="da-metric-val">118°</div><div class="da-metric-lbl">Elbow</div></div>
+            <div class="da-metric-card"><div class="da-metric-val">67°</div><div class="da-metric-lbl">Arc</div></div>
+          </div>
+          <div class="da-bottom-actions">
+            <button class="da-btn primary">👍 Helpful</button>
+            <button class="da-btn ghost">👎 Not quite</button>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer">00:00</div>
+            <button class="rec-btn"><div class="rec-btn-inner ready"></div></button>
+            <div class="rec-hint">Tap to start recording</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Session History</div>
+        <div class="hist-screen">
+          <div class="hist-header"><span>Sessions</span><span>8 total</span></div>
+          <div class="hist-trajectory">
+            <div class="hist-traj-label">Your trajectory</div>
+            <div class="hist-traj-text">8 sessions · Forehand improving</div>
+            <div class="hist-traj-delta">58% → 67% on-table rate</div>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Today · 32 min</div><div class="hist-info-meta">86 forehand, 41 backhand</div></div>
+            <span class="hist-status analyzed">58%</span>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Apr 3 · 28 min</div><div class="hist-info-meta">72 forehand, 38 backhand</div></div>
+            <span class="hist-status analyzed">52%</span>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Apr 1 · 45 min</div><div class="hist-info-meta">Recording only</div></div>
+            <span class="hist-status ready">Analyze</span>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Mar 30 · 20 min</div><div class="hist-info-meta">64 forehand</div></div>
+            <span class="hist-status analyzed">49%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Direction B ===== -->
+  <div class="direction-section" id="sec-b">
+    <div class="direction-header">
+      <div>
+        <h2>B · Left-Anchored Editorial</h2>
+        <div class="subtitle">Left-aligned, asymmetric layout. The giant number anchors left while metadata flows alongside. The coaching tip lives in a distinct block with a left border accent. Feels like a sports analytics article.</div>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div class="db-screen">
+          <div class="db-back">← Sessions</div>
+          <div class="db-stroke-label">Forehand Topspin</div>
+          <div class="db-hero-row">
+            <div class="db-hero-num">58%</div>
+            <div class="db-hero-meta">
+              <div class="db-hero-label">on-table rate</div>
+              <div class="db-delta">▲ from 52%</div>
+              <div style="font-size:11px;color:var(--outline);margin-top:2px;">86 strokes · 32 min</div>
+            </div>
+          </div>
+          <div class="db-coach-block">
+            <div class="db-coach-label">One thing to try</div>
+            <div class="db-coach-text">Your shoulder rotation has been climbing — and your on-table rate is climbing with it.</div>
+          </div>
+          <div class="db-section-divider"></div>
+          <div class="db-metrics-header">Mechanics</div>
+          <div class="db-metric-row"><span class="db-metric-name">Shoulder rotation</span><span class="db-metric-value">42°</span></div>
+          <div class="db-metric-row"><span class="db-metric-name">Elbow angle</span><span class="db-metric-value">118°</span></div>
+          <div class="db-metric-row"><span class="db-metric-name">Swing arc</span><span class="db-metric-value">67°</span></div>
+          <div class="db-metric-row"><span class="db-metric-name">Wrist velocity</span><span class="db-metric-value">4.2 m/s</span></div>
+          <div class="db-metric-row"><span class="db-metric-name">Weight transfer</span><span class="db-metric-value">0.73</span></div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer" style="color:#E53935;">12:47</div>
+            <button class="rec-btn"><div class="rec-btn-inner recording"></div></button>
+            <div class="rec-hint">Tap to stop</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Session History</div>
+        <div class="hist-screen">
+          <div class="hist-header"><span>Sessions</span><span>8 total</span></div>
+          <div class="hist-trajectory">
+            <div class="hist-traj-label">Your trajectory</div>
+            <div class="hist-traj-text">8 sessions · Forehand improving</div>
+            <div class="hist-traj-delta">58% → 67% on-table rate</div>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Today · 32 min</div><div class="hist-info-meta">86 forehand, 41 backhand</div></div>
+            <span class="hist-status analyzed">58%</span>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Apr 3 · 28 min</div><div class="hist-info-meta">72 forehand, 38 backhand</div></div>
+            <span class="hist-status analyzed">52%</span>
+          </div>
+          <div class="hist-session-item">
+            <div class="hist-thumb"></div>
+            <div class="hist-info"><div class="hist-info-title">Apr 1 · 45 min</div><div class="hist-info-meta">Recording only</div></div>
+            <span class="hist-status ready">Analyze</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Direction C ===== -->
+  <div class="direction-section" id="sec-c">
+    <div class="direction-header">
+      <div>
+        <h2>C · Hero Band</h2>
+        <div class="subtitle">The hero metric lives in a primary-colored band at the top — giving it physical weight and separation from the rest of the content. The coaching tip and details flow below on a white surface. Strong visual hierarchy through color blocking.</div>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div style="min-height:540px;display:flex;flex-direction:column;">
+          <div class="dc-hero-band">
+            <div class="top-row"><span>← Sessions</span><span>Share</span></div>
+            <div class="dc-stroke-type">Forehand Topspin · 32 min</div>
+            <div class="dc-hero-num">58%</div>
+            <div class="dc-hero-sub">
+              <span class="dc-hero-label">on-table rate · 86 strokes</span>
+              <span class="dc-delta-chip">▲ from 52%</span>
+            </div>
+          </div>
+          <div class="dc-body">
+            <div class="dc-coach">
+              <div class="label">One thing to try</div>
+              Your shoulder rotation has been climbing — and your on-table rate is climbing with it.
+            </div>
+            <div class="dc-breakdown">
+              <div class="dc-breakdown-label">Mechanics</div>
+              <div class="dc-mini-row">
+                <div class="dc-mini"><div class="dc-mini-val">42°</div><div class="dc-mini-lbl">Shoulder</div></div>
+                <div class="dc-mini"><div class="dc-mini-val">118°</div><div class="dc-mini-lbl">Elbow</div></div>
+                <div class="dc-mini"><div class="dc-mini-val">67°</div><div class="dc-mini-lbl">Arc</div></div>
+              </div>
+            </div>
+            <div class="dc-quality">Based on 94% of strokes · Good visibility</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer">00:00</div>
+            <button class="rec-btn"><div class="rec-btn-inner ready"></div></button>
+            <div class="rec-hint">Tap to start recording</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Direction D ===== -->
+  <div class="direction-section" id="sec-d">
+    <div class="direction-header">
+      <div>
+        <h2>D · Minimal Typographic</h2>
+        <div class="subtitle">Pure white background. The hero number is rendered in black, not primary color — the metric is the content, not a design element. Grid-based metrics with minimal chrome. The most restrained option — data speaks without decoration.</div>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div class="dd-screen">
+          <div class="dd-nav">← Sessions</div>
+          <div class="dd-date">Today · 32 min · 86 strokes</div>
+          <div class="dd-type">Forehand Topspin</div>
+          <div class="dd-hero-block">
+            <div class="dd-hero-num">58%</div>
+            <div class="dd-hero-sub">
+              <span class="dd-hero-label">on-table rate</span>
+              <span class="dd-delta-inline">▲ from 52%</span>
+            </div>
+          </div>
+          <div class="dd-coach-text">Your shoulder rotation has been climbing — and your on-table rate is climbing with it.</div>
+          <div class="dd-metrics-grid">
+            <div class="dd-metric-cell"><div class="dd-mc-val">42°</div><div class="dd-mc-lbl">Shoulder</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val">118°</div><div class="dd-mc-lbl">Elbow</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val">67°</div><div class="dd-mc-lbl">Arc</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val">4.2</div><div class="dd-mc-lbl">Wrist m/s</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val">0.73</div><div class="dd-mc-lbl">Wt. Transfer</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val">81cm</div><div class="dd-mc-lbl">Contact Ht</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer">00:00</div>
+            <button class="rec-btn"><div class="rec-btn-inner ready"></div></button>
+            <div class="rec-hint">Tap to start recording</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Direction E ===== -->
+  <div class="direction-section" id="sec-e">
+    <div class="direction-header">
+      <div>
+        <h2>E · Card Compartments</h2>
+        <div class="subtitle">Every content block in its own card on a tinted background. Clear visual compartmentalization. Good for scanability — each card is self-contained. Slightly denser, more structured feel. The hero, coach, and mechanics are distinct zones.</div>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div class="de-screen">
+          <div class="de-nav-row"><span class="de-back">← Sessions</span><span class="de-time">32 min</span></div>
+          <div class="de-card">
+            <div class="de-card-label">Forehand Topspin · 86 strokes</div>
+            <div class="de-hero-row">
+              <div class="de-hero-num">58%</div>
+              <div class="de-hero-meta">
+                <div>on-table rate</div>
+                <div class="de-delta">▲ from 52%</div>
+              </div>
+            </div>
+          </div>
+          <div class="de-card">
+            <div class="de-card-label">One thing to try</div>
+            <div class="de-coach-text">Your shoulder rotation has been climbing — and your on-table rate is climbing with it.</div>
+          </div>
+          <div class="de-card">
+            <div class="de-card-label">Mechanics</div>
+            <div class="de-mini-row">
+              <div class="de-mini"><div class="de-mini-val">42°</div><div class="de-mini-lbl">Shoulder</div></div>
+              <div class="de-mini"><div class="de-mini-val">118°</div><div class="de-mini-lbl">Elbow</div></div>
+              <div class="de-mini"><div class="de-mini-val">67°</div><div class="de-mini-lbl">Arc</div></div>
+            </div>
+          </div>
+          <div class="de-card">
+            <div class="de-quality-row">
+              <span class="de-quality-text">Based on 94% of strokes</span>
+              <div class="de-feedback-btns">
+                <button class="de-fb-btn">👍</button>
+                <button class="de-fb-btn">👎</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer" style="color:#E53935;">08:23</div>
+            <button class="rec-btn"><div class="rec-btn-inner recording"></div></button>
+            <div class="rec-hint">Tap to stop</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Direction F ===== -->
+  <div class="direction-section" id="sec-f">
+    <div class="direction-header">
+      <div>
+        <h2>F · Immersive Dark</h2>
+        <div class="subtitle">Dark surface for the session summary — the screen becomes a focused "results" moment. The number glows against the dark background. More theatrical and immersive. Note: light theme everywhere else; only the summary screen goes dark for impact.</div>
+      </div>
+    </div>
+    <div class="phones-row">
+      <div class="phone-frame">
+        <div class="screen-label">Session Summary</div>
+        <div class="df-screen">
+          <div class="df-top"><span>← Sessions</span><span>Share</span></div>
+          <div class="df-stroke-type">Forehand Topspin · 32 min</div>
+          <div class="df-hero-num">58%</div>
+          <div class="df-hero-sub">
+            <span class="df-hero-label">on-table rate · 86 strokes</span>
+            <span class="df-delta-chip">▲ from 52%</span>
+          </div>
+          <div class="df-divider"></div>
+          <div class="df-coach">
+            <div class="label">One thing to try</div>
+            Your shoulder rotation has been climbing — and your on-table rate is climbing with it.
+          </div>
+          <div class="df-metrics">
+            <div class="df-mini"><div class="df-mini-val">42°</div><div class="df-mini-lbl">Shoulder</div></div>
+            <div class="df-mini"><div class="df-mini-val">118°</div><div class="df-mini-lbl">Elbow</div></div>
+            <div class="df-mini"><div class="df-mini-val">67°</div><div class="df-mini-lbl">Arc</div></div>
+          </div>
+          <div class="df-bottom">Based on 94% of strokes · Good visibility</div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">Recording</div>
+        <div class="rec-screen">
+          <div class="phone-notch"></div>
+          <div class="rec-viewfinder">Camera Preview</div>
+          <div class="rec-bottom">
+            <div class="rec-timer">00:00</div>
+            <button class="rec-btn"><div class="rec-btn-inner ready"></div></button>
+            <div class="rec-hint">Tap to start recording</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Compare All ===== -->
+  <div class="compare-section" id="sec-compare">
+    <div class="direction-header">
+      <div>
+        <h2>Compare All Directions</h2>
+        <div class="subtitle">Session summary screen side-by-side. Same data, same palette, different layout philosophies.</div>
+      </div>
+    </div>
+    <div class="compare-grid">
+      <div class="phone-frame">
+        <div class="screen-label">A · Clean Center</div>
+        <div class="da-screen" style="min-height:420px;">
+          <div class="da-stroke-label" style="margin-top:8px;">Forehand Topspin</div>
+          <div class="da-hero">
+            <div class="da-hero-num" style="font-size:48px;">58%</div>
+            <div class="da-hero-label">on-table rate</div>
+            <div class="da-delta pos" style="font-size:11px;">▲ from 52%</div>
+          </div>
+          <div class="da-divider"></div>
+          <div class="da-coach" style="font-size:12px;"><strong>One thing to try:</strong> Shoulder rotation climbing with on-table rate.</div>
+          <div class="da-metrics" style="margin-top:12px;">
+            <div class="da-metric-card" style="padding:6px 4px;"><div class="da-metric-val" style="font-size:16px;">42°</div><div class="da-metric-lbl">Shldr</div></div>
+            <div class="da-metric-card" style="padding:6px 4px;"><div class="da-metric-val" style="font-size:16px;">118°</div><div class="da-metric-lbl">Elbow</div></div>
+            <div class="da-metric-card" style="padding:6px 4px;"><div class="da-metric-val" style="font-size:16px;">67°</div><div class="da-metric-lbl">Arc</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">B · Left Editorial</div>
+        <div class="db-screen" style="min-height:420px;">
+          <div class="db-stroke-label">Forehand Topspin</div>
+          <div class="db-hero-row">
+            <div class="db-hero-num" style="font-size:56px;">58%</div>
+            <div class="db-hero-meta"><div class="db-hero-label">on-table rate</div><div class="db-delta">▲ from 52%</div></div>
+          </div>
+          <div class="db-coach-block" style="margin-top:12px;padding:10px 12px;">
+            <div class="db-coach-label">One thing to try</div>
+            <div class="db-coach-text" style="font-size:12px;">Shoulder rotation climbing with rate.</div>
+          </div>
+          <div class="db-section-divider"></div>
+          <div class="db-metric-row"><span class="db-metric-name" style="font-size:11px;">Shoulder</span><span class="db-metric-value" style="font-size:14px;">42°</span></div>
+          <div class="db-metric-row"><span class="db-metric-name" style="font-size:11px;">Elbow</span><span class="db-metric-value" style="font-size:14px;">118°</span></div>
+          <div class="db-metric-row"><span class="db-metric-name" style="font-size:11px;">Arc</span><span class="db-metric-value" style="font-size:14px;">67°</span></div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">C · Hero Band</div>
+        <div style="min-height:420px;display:flex;flex-direction:column;">
+          <div class="dc-hero-band" style="padding:12px 16px 16px;">
+            <div class="dc-stroke-type" style="font-size:9px;">Forehand Topspin</div>
+            <div class="dc-hero-num" style="font-size:48px;">58%</div>
+            <div class="dc-hero-sub"><span class="dc-hero-label" style="font-size:11px;">on-table rate</span><span class="dc-delta-chip" style="font-size:10px;">▲ 52%</span></div>
+          </div>
+          <div class="dc-body" style="padding:12px 16px;min-height:auto;">
+            <div class="dc-coach" style="font-size:12px;"><div class="label" style="font-size:9px;">One thing to try</div>Shoulder rotation climbing with rate.</div>
+            <div class="dc-mini-row" style="margin-top:12px;">
+              <div class="dc-mini" style="padding:6px 4px;"><div class="dc-mini-val" style="font-size:14px;">42°</div><div class="dc-mini-lbl">Shldr</div></div>
+              <div class="dc-mini" style="padding:6px 4px;"><div class="dc-mini-val" style="font-size:14px;">118°</div><div class="dc-mini-lbl">Elbow</div></div>
+              <div class="dc-mini" style="padding:6px 4px;"><div class="dc-mini-val" style="font-size:14px;">67°</div><div class="dc-mini-lbl">Arc</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">D · Minimal Type</div>
+        <div class="dd-screen" style="min-height:420px;padding:12px 16px 16px;">
+          <div class="dd-date" style="font-size:10px;">Today · 32 min</div>
+          <div class="dd-type" style="font-size:12px;margin-bottom:16px;">Forehand Topspin</div>
+          <div class="dd-hero-num" style="font-size:60px;">58%</div>
+          <div class="dd-hero-sub" style="margin-bottom:16px;"><span class="dd-hero-label" style="font-size:11px;">on-table rate</span><span class="dd-delta-inline" style="font-size:10px;">▲ 52%</span></div>
+          <div class="dd-coach-text" style="font-size:12px;margin-bottom:16px;">Shoulder rotation climbing with rate.</div>
+          <div class="dd-metrics-grid">
+            <div class="dd-metric-cell"><div class="dd-mc-val" style="font-size:14px;">42°</div><div class="dd-mc-lbl" style="font-size:8px;">Shoulder</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val" style="font-size:14px;">118°</div><div class="dd-mc-lbl" style="font-size:8px;">Elbow</div></div>
+            <div class="dd-metric-cell"><div class="dd-mc-val" style="font-size:14px;">67°</div><div class="dd-mc-lbl" style="font-size:8px;">Arc</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">E · Card Compartments</div>
+        <div class="de-screen" style="min-height:420px;padding:8px 10px 10px;gap:6px;">
+          <div class="de-card" style="padding:10px;">
+            <div class="de-card-label" style="font-size:9px;">Forehand Topspin</div>
+            <div class="de-hero-row"><div class="de-hero-num" style="font-size:40px;">58%</div><div class="de-hero-meta" style="font-size:10px;"><div>on-table</div><div class="de-delta" style="font-size:10px;">▲ 52%</div></div></div>
+          </div>
+          <div class="de-card" style="padding:10px;">
+            <div class="de-card-label" style="font-size:9px;">Coach</div>
+            <div class="de-coach-text" style="font-size:11px;">Shoulder rotation climbing with rate.</div>
+          </div>
+          <div class="de-card" style="padding:10px;">
+            <div class="de-mini-row">
+              <div class="de-mini"><div class="de-mini-val" style="font-size:14px;">42°</div><div class="de-mini-lbl">Shldr</div></div>
+              <div class="de-mini"><div class="de-mini-val" style="font-size:14px;">118°</div><div class="de-mini-lbl">Elbow</div></div>
+              <div class="de-mini"><div class="de-mini-val" style="font-size:14px;">67°</div><div class="de-mini-lbl">Arc</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="screen-label">F · Immersive Dark</div>
+        <div class="df-screen" style="min-height:420px;padding:12px 16px 16px;">
+          <div class="df-stroke-type" style="font-size:9px;">Forehand Topspin</div>
+          <div class="df-hero-num" style="font-size:60px;">58%</div>
+          <div class="df-hero-sub"><span class="df-hero-label" style="font-size:11px;">on-table rate</span><span class="df-delta-chip" style="font-size:10px;">▲ 52%</span></div>
+          <div class="df-divider"></div>
+          <div class="df-coach" style="font-size:12px;"><div class="label" style="font-size:9px;">One thing to try</div>Shoulder rotation climbing with rate.</div>
+          <div class="df-metrics" style="margin-top:16px;">
+            <div class="df-mini"><div class="df-mini-val" style="font-size:14px;">42°</div><div class="df-mini-lbl">Shldr</div></div>
+            <div class="df-mini"><div class="df-mini-val" style="font-size:14px;">118°</div><div class="df-mini-lbl">Elbow</div></div>
+            <div class="df-mini"><div class="df-mini-val" style="font-size:14px;">67°</div><div class="df-mini-lbl">Arc</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eval-criteria">
+      <h3>Evaluation Guide</h3>
+      <div class="eval-row"><span class="eval-icon">📐</span><div class="eval-text"><strong>Layout hierarchy:</strong> Which puts the three beats (number → trend → tip) in the clearest reading order?</div></div>
+      <div class="eval-row"><span class="eval-icon">🤫</span><div class="eval-text"><strong>Quiet voice:</strong> Which feels most like a coach who doesn't need to raise their voice?</div></div>
+      <div class="eval-row"><span class="eval-icon">⏱️</span><div class="eval-text"><strong>30-second scan:</strong> Which can you absorb in a single glance without scrolling?</div></div>
+      <div class="eval-row"><span class="eval-icon">📱</span><div class="eval-text"><strong>Material 3 fit:</strong> Which will map most naturally to Flutter's Material 3 widget library?</div></div>
+      <div class="eval-row"><span class="eval-icon">🔄</span><div class="eval-text"><strong>Scalability:</strong> Which handles graceful degradation ("Based on 47% of strokes") and baseline building ("37/100 strokes") without breaking?</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.direction-section, .compare-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

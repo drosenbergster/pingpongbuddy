@@ -1,0 +1,27 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+
+# IDE
+.idea/
+*.iml
+
+# BMad Builder tooling (reinstall via bmad-bmb-setup)
+.claude/
+.cursor/skills/
+_bmad/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Generated (tracked in VCS per architecture decision)
+# *.freezed.dart
+# *.g.dart
