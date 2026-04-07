@@ -1,6 +1,9 @@
 targets:
   $default:
     builders:
-      freezed:
+      drift_dev:
         options:
-          format: true
+          store_date_time_values_as_text: false
+          named_parameters: true
+          databases:
+            pingpongbuddy: lib/core/database/app_database.dart
